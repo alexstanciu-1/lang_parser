@@ -1,8 +1,8 @@
 <?php
 
-namespace lang_parser\parsers\lang_phpbase;
+namespace lang_parser\tokenizers;
 
-final class tokenizer
+final class phpbase
 {
 	/**
 	 * The standard for a token must be:
@@ -44,6 +44,7 @@ final class tokenizer
 				}
 			}
 		}
+		
 		return $std_toks;
 	}
 }

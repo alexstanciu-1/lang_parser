@@ -55,6 +55,7 @@ class config
 					'$var'			=> [T_VARIABLE],
 					'$value'		=> [T_DNUMBER, T_LNUMBER, T_CONSTANT_ENCAPSED_STRING],
 					'$op'			=> ['+', '-', '/', '*', '~', '^', '&', '&&', '|', '||', '**', T_NEW, '<', '>'],
+					'$op_side'		=> [T_INC, T_DEC],
 					'$append'		=> ['[]'],
 					'$assign'		=> ['=', '+=', '-=', '/=', '&=', '|='],
 					'$php_open'		=> [T_OPEN_TAG],
@@ -124,7 +125,11 @@ class config
 
 				# Note: we don't want $expr to equal $var or $value, we can have some aliases to make things shorter
 				#			$expr must have something extra: at least round brackets OR $assign|$op 
-				'$expr'			=> '((($var|$value|\($expr\)|$call|$access) (($assign|$op) ($var|$value|\($expr\)|$call|$access|$array))+)|(\($expr\)))',
+				'$expr'			=> '((($var|$value|\($expr\)|$call|$access) (($assign|$op) ($var|$value|\($expr\)|$call|$access|$array))+)
+										|(\($expr\))
+										|(($var|\($expr\)|$call|$access) $op_side)
+										|( $op_side ($var|\($expr\)|$call|$access) )
+									)',
 				# '$array'		=> '[((($var|$value|$call|$expr) $d_arr)? ($var|$value|$expr|$array|$call)) (\, (($var|$value|$call|$expr) $d_arr)? ($var|$value|$expr|$array|$call))*]', # ($value $d_arr)? 
 				'$array'		=> '[(((($var|$value|$call|$expr) $d_arr)? ($var|$value|$array|$call|$expr)) (\, (($var|$value|$call|$expr) $d_arr)? ($var|$value|$array|$call|$expr))* (\,)? )?]', # ($value $d_arr)? 
 				# '$array'		=> '[((<item>(($var|$value) $d_arr:sillyname)? ($var|$value|$array)) (<item>\, (($var|$value) $d_arr:sillyname)? ($var|$value|$array))* (\,)? )?]', # ($value $d_arr)? 

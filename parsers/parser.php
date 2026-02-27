@@ -27,6 +27,8 @@ final class parser
 	protected static array $defs = [];
 	protected static bool $group_space_and_comment = false;
 	protected static bool $extra_space_and_comment_allowed_everywhere = true;
+	
+	protected static array $match_alternatives = [];
 
 	public static final function run(string $lang, string $path, string $file, string $gen_path)
 	{
@@ -153,9 +155,13 @@ final class parser
 		
 		# echo "\n=================================================================================================================\n";
 		
+		static::$match_alternatives = [];
 		foreach (static::$tokens_defs as $k => $list) {
 			foreach ($list as $v) {
 				static::$tokens_map[$v] = $k;
+				if (is_string($v)) {
+					static::$match_alternatives[$v] = $v;
+				}
 			}
 		}
 		
@@ -183,12 +189,25 @@ final class parser
 		if (!$ext) {
 			throw new \Exception("Extension not defined for lang: {$lang}");
 		}
-		$expected_path = __DIR__."/lang_{$lang}/{$name}.{$ext}";
-		if (!is_file($expected_path)) {
-			throw new \Exception("The `{$name}` file for `{$lang}` was not found. Expecting file `{$expected_path}`");
+		if ($name === 'tokenizer') {
+			
+			$expected_path = __DIR__."/../tokenizers/{$lang}.{$ext}";
+			if (!is_file($expected_path)) {
+				throw new \Exception("The `{$name}` file for `{$lang}` was not found. Expecting file `{$expected_path}`");
+			}
+			require_once $expected_path;
+			$class_name = "lang_parser\\tokenizers\\{$lang}";
 		}
-		require_once $expected_path;
-		$class_name = "lang_parser\\parsers\\lang_{$lang}\\{$name}";
+		else { # if ($name === 'config')
+			
+			$expected_path = __DIR__."/lang_{$lang}/{$name}.{$ext}";
+			if (!is_file($expected_path)) {
+				throw new \Exception("The `{$name}` file for `{$lang}` was not found. Expecting file `{$expected_path}`");
+			}
+			require_once $expected_path;
+			$class_name = "lang_parser\\parsers\\lang_{$lang}\\{$name}";
+		}
+		
 		if (!class_exists($class_name)) {
 			throw new \Exception("No `{$name}` was found for: {$lang}. Expecting class `{$class_name}` in file `{$expected_path}`");
 		}

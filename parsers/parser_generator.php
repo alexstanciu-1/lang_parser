@@ -190,20 +190,20 @@ trait parser_generator
 					*/
 				}
 				
-				if (($match[0] === '\\') && (strlen($match) === 2) && ($match[1] !== 's') && ($match[1] !== 'c')) {
-					$export_match = var_export($match[1], true);
+				$cmp_match = (($match[0] === '\\') && (strlen($match) === 2) && ($match[1] !== 's') && ($match[1] !== 'c')) ? $match[1] : $match;
+				$var_tokens = '$tokens';
+				if (static::$match_alternatives[$cmp_match] ?? false) {
+					$var_tokens = '$tokens_str';
 				}
-				else {
-					$export_match = var_export($match, true);
-				}
-
+				$export_match = var_export($cmp_match, true);
+				
 				if ($debug_echo) {
 					$output[] = $tabs."\t\techo \"".addslashes($tabs)."\".'looking at: '.{$export_match}.\" | pos: \".\\simple_cpp\\parsers\\parser_generator::print_pos_in_arr({$var_solutions}).\" \\n\";\n";
 				}
 				$output[] = $tabs.'foreach ('.$var_solutions.' as $ms) {'."\n".
 						$tabs."\t".'$pos = $ms->pos;'."\n".
 						$out_consume_spaces.
-						$tabs."\t".'if ('.$export_match.' === $tokens[$pos]) {'."\n".
+						$tabs."\t".'if ('.$export_match.' === '.$var_tokens.'[$pos]) {'."\n".
 						($debug_echo ? $tabs."\t\techo \"".addslashes($tabs)."\".'matched: '.\$tokens[\$pos].\"\\n\";\n" : '').
 						$tabs."\t\t{$var_new_sol}".'[] = new rex_pos($pos + 1, $ms);'."\n".
 						$tabs."\t}\n".
