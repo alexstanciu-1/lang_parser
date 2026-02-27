@@ -1,0 +1,24 @@
+
+@TODO 
+	- implement a max depth to avoid recurssion
+	- limits ... max calls ... max file size ... max tokens ... etc (test for these limits)
+
+	@TODO DOCS !!! - comment and some .MDs files
+
+use BNF / EBNF instead of what we have now ?
+
+==================================================================================================
+OPTIMIZATIONS
+==================================================================================================
+
+1. For regex modifiers : ? , + , * use only the max match (greedy-only)
+	- this needs to be tested and see that there is no issue with this approach in any expression
+	- maybe on a flag ... and test with without for some time
+	- what if each expression/part has a flag to establish this ?!
+	CHANGE
+		$new_set = $match_set; # min=0
+	TO BE APPLIED IF NOTHING WAS FOUND
+		$new_set = []; # min=0
+		if ($is_match) ... same code
+		else keep the old set !
+

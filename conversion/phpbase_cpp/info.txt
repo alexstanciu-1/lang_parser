@@ -1,0 +1,3 @@
+
+PHPBASE is not a full implementation of PHP for now.
+More info to come.
