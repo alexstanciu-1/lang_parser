@@ -50,9 +50,9 @@ final class parser
 		# echo "\n\n\n---------------------------------------------------------------------------------------------------------------------\n\n\n";
 
 		# we could also split WHITE-SPACE BY new-line and have better grouping of whitespace
-		
-		array_unshift($tokens, static::$cfg['T_FILE_START']);
-		$tokens[] = static::$cfg['T_FILE_END'];
+		array_unshift($tokens, [static::$cfg['T_FILE_START'], static::$cfg['T_FILE_START'], 1, 1]);
+		$last_tok = end($tokens);
+		$tokens[] = [static::$cfg['T_FILE_END'], static::$cfg['T_FILE_END'], $last_tok[2], $last_tok[3]];
 		
 		list ($parser_regex_class, $parser_regex_path) = static::generate_parser($lang);
 		
@@ -61,7 +61,7 @@ final class parser
 		# echo "\n--------------------------------------------------------------------------------------------------------------------------\n";
 
 		$pos = 0;
-		list ($rx_tokens, $rx_tokens_source) = static::prepare_tokens($tokens, $pos);
+		list ($rx_tokens, $rx_tokens_str, $rx_tokens_source) = static::prepare_tokens($tokens, $pos);
 		
 		# echo "\n----------------------------------------------------------------------------------------\n";
 		
@@ -70,16 +70,8 @@ final class parser
 		$set_0 = new \lang_parser\parsers\lang_phpbase\rex_pos(0, null);
 		
 		$t1 = microtime(true);
-		if (false) { # one solution mode
-			$last_m = $parser_regex_class::rex_file($set_0, $rx_tokens);
-			$is_match = $last_m ? true : false;
-			$last_set_list = [$last_m];
-		}
-		else {
-			list($is_match, $last_set_list) = $parser_regex_class::rex_file([$set_0], $rx_tokens);
-		}
+		list($is_match, $last_set_list) = $parser_regex_class::rex_file([$set_0], $rx_tokens, $rx_tokens_str);
 		$t2 = microtime(true);
-		
 		
 		# echo "\n----------------------------------------------------------------------------------------\n";
 		
@@ -109,7 +101,8 @@ final class parser
 				while (($last_set = $last_set->prev));
 
 				$ordered = array_reverse($ordered);
-
+				static::link_nodes($ordered, count($ordered));
+		
 				echo "\n\n\nSet #".($pos+1), " | matches count: ".count($ordered), "\n";
 				echo "\n----------------------------------------------------------------------------------------\n";
 				static::print_results_html($ordered, $rx_tokens, $rx_tokens_source, count($ordered));
@@ -121,9 +114,8 @@ final class parser
 		
 		echo "</pre>";
 		
-		$struct = $ordered;
-		var_dump($ordered[1]->children[0]->parent === $ordered[1]);
-		die;
+		# this is a bit hard-coded atm
+		return [$ordered[1] ?? null];
 	}
 
 	protected static final function static_init(string $lang)

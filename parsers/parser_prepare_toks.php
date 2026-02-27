@@ -7,18 +7,20 @@ trait parser_prepare_toks
 	protected static final function prepare_tokens(array $tokens, int $pos)
 	{
 		$collected = [];
+		$collected_str = [];
 		$collected_data = [];
 		$collected_pos = 0;
 		
 		$prev_tok_key = null;
 		while (($tok = ($tokens[$pos] ?? null))) {
 			
-			$tok_key = is_string($tok) ? $tok : $tok[0];
-			$delim = is_string($tok) ? (static::$tokens_delim[$tok] ?? null) : null;
+			$tok_key = $tok[0];
+			$delim = is_string($tok[0]) ? (static::$tokens_delim[$tok[0]] ?? null) : null;
 			
 			if ($delim !== null) {
 				
-				$collected[] = $tok;
+				$collected[] = $tok_key;
+				$collected_str[] = $tok[1];
 				$collected_data[] = [$tok];
 				$collected_pos++;
 			}
@@ -44,17 +46,20 @@ trait parser_prepare_toks
 						if ($tok_is === '\s') {
 							# ensure it's a space if prev was a comment `\c`
 							$collected[$collected_pos - 1] = $tok_is;
+							$collected_str[$collected_pos - 1] = $tok_is;
 						}
 					}
 					else {
 						# add it normally
 						$collected[$collected_pos] = $tok_is;
+						$collected_str[$collected_pos] = $tok_is;
 						$collected_data[$collected_pos] = [$tok];
 						$collected_pos++;
 					}
 				}
 				else {
 					$collected[] = $tok_is;
+					$collected_str[] = $tok[1];
 					$collected_data[] = [$tok];
 					$collected_pos++;
 				}
@@ -63,43 +68,43 @@ trait parser_prepare_toks
 			$prev_tok_key = $tok_key;
 		}
 		
-		$rx_tokens = $collected;
-		$rx_tokens_source = $collected_data;
-		
 		if (static::$extra_space_and_comment_allowed_everywhere) {
-			# optimization
+			# optimization, we remove space/comments from the list and move them in the info list
 			$new_rx = [];
-			$new_rx_src = [];
+			$new_rx_str = [];
+			$new_rx_data = [];
 			$count_spaces = 0;
 			$count_normal = 0;
 			$last_space = null;
-			foreach ($rx_tokens as $pos => $t) {
+			foreach ($collected as $pos => $t) {
 				if (($t === '\s') || ($t === '\c')) {
 					$count_spaces++;
 					if (isset($last_space)) {
 						throw new \Exception('We made a mistake on the previus step. There should be no consecutive spaces/comments.');
 					}
-					$last_space = $rx_tokens_source[$pos];
+					$last_space = $collected_data[$pos];
 				}
 				else {
-					$tok_src = $rx_tokens_source[$pos];
+					$tok_src = $collected_data[$pos];
 					if (isset($last_space)) {
 						$tok_src['s'] = $last_space;
 						$last_space = null;
 					}
 					$count_normal++;
 					$new_rx[] = $t;
-					$new_rx_src[] = $tok_src;
+					$new_rx_str[] = $collected_str[$pos];
+					$new_rx_data[] = $tok_src;
 				}
 			}
-			$rx_tokens = $new_rx;
-			$rx_tokens_source = $new_rx_src;
+			$collected = $new_rx;
+			$collected_str = $new_rx_str;
+			$collected_data = $new_rx_data;
 		}
 		else {
 			throw new \Exception('The code is not tested with `$extra_space_and_comment_allowed_everywhere` disabled');
 		}
 		
-		return [$rx_tokens, $rx_tokens_source];
+		return [$collected, $collected_str, $collected_data];
 	}
 	
 	public static final function print_prepared_tokens(array $tokens, int $pos = 0, int $len = null)

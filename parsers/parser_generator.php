@@ -14,7 +14,7 @@ trait parser_generator
 		foreach (static::$defs_setup as $name => $regex_node)
 		{
 			$output = [];
-			$output[] = "\npublic static function rex_".substr($name, 1)."(array \$solutions, array \$tokens, int \$depth = 0)\n{\n";
+			$output[] = "\npublic static function rex_".substr($name, 1)."(array \$solutions, array \$tokens, array \$tokens_str, int \$depth = 0)\n{\n";
 			$output[] = "\tif (\$depth > 500) throw new \\Exception('tooo deep!');\n";
 
 			$output[] = "\tself::\$stats['enter']['{$name}']++;\n";
@@ -131,7 +131,7 @@ trait parser_generator
 			# before
 			$output[] = $tabs."# START WRAP\n";
 			# using function `use`, makes it a bit faster 
-			$output[] = $tabs."list(\$is_match, \$rule_set) = (function (array \$solutions, array \$tokens, array &\$new_sol = null) use (\$depth) {\n";
+			$output[] = $tabs."list(\$is_match, \$rule_set) = (function (array \$solutions, array \$tokens, array \$tokens_str, array &\$new_sol = null) use (\$depth) {\n";
 			
 			$tabs .= "\t";
 			static::regex_generate_code($regex_name, $node, $output, $allow_space_or_comment_before, true, false, $depth, $tabs);
@@ -139,8 +139,8 @@ trait parser_generator
 			
 			$tabs = substr($tabs, 1);
 			$output[] = $inside_loop ? 
-							$tabs."})(\$mset_loop, \$tokens);\n" :
-							$tabs."})(\$solutions, \$tokens);\n";
+							$tabs."})(\$mset_loop, \$tokens, \$tokens_str);\n" :
+							$tabs."})(\$solutions, \$tokens, \$tokens_str);\n";
 			
 			$var_new_sol = $inside_loop ? '$loop_set' : '$new_sol';
 			$output[] = $tabs."if (\$is_match) foreach (\$rule_set as \$r_set) {$var_new_sol}[] = \$r_set; \n";
@@ -164,7 +164,7 @@ trait parser_generator
 			
 			if ($node->is_call) {
 				
-				$output[] = $tabs."list(\$is_match, \$rule_set) = self::rex_".substr($match, 1)."({$var_solutions}, \$tokens, \$depth + 1);\n";
+				$output[] = $tabs."list(\$is_match, \$rule_set) = self::rex_".substr($match, 1)."({$var_solutions}, \$tokens, \$tokens_str, \$depth + 1);\n";
 				$output[] = $tabs."if (\$is_match) {".
 							" foreach (\$rule_set as \$c_set) ".
 								"{$var_new_sol}[] = \$c_set; } # AAAA\n";
@@ -299,5 +299,30 @@ trait parser_generator
 			$pos[] = $s->pos;
 		}
 		return implode(", ", $pos);
+	}
+	
+	public static function link_nodes(array $ordered, int $count, int &$pos = 0, $parent = null)
+	{
+		while ($pos < $count) {
+			$item = $ordered[$pos];
+			
+			# increment here
+			$pos++;
+			
+			if (isset($parent)) {
+				$item->parent = $parent;
+				$parent->children[] = $item;
+			}
+			
+			if ($item->mark[0] === '>') { # enter
+				static::link_nodes($ordered, $count, $pos, $item);
+			}
+			else if ($item->mark[0] === '<') { # exit
+				return;
+			}
+			else {
+				
+			}
+		}
 	}
 }

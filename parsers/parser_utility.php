@@ -84,12 +84,6 @@ window.addEventListener('mouseout', function ($event) {
 				return;
 			}
 			else {
-				
-				if (isset($parent)) {
-					$item->parent = $parent;
-					$parent->children[] = $item;
-				}
-				
 				echo "<span title='{$regex_tok} | {$parent->mark}' class='match-e'>";
 				echo htmlentities($tok_str);
 				echo "</span>";
