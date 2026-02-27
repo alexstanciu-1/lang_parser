@@ -96,7 +96,7 @@ final class convertor
 		$parsed = static::run_tests('phpbase', 'cpp', __DIR__."/../parsers/lang_phpbase/test_data/");
 		
 		# echo "simple_cpp for: {$dir}\n";
-		(new static(is_string($dir) ? [$dir] : $dir))->compile();
+		# (new static(is_string($dir) ? [$dir] : $dir))->compile();
 	}
 	
 	public static function get_class_dir()
@@ -116,6 +116,11 @@ final class convertor
 		$items = scandir($source_code_path);
 		foreach ($items as $basename) {
 			if (($basename === '.') || ($basename === '..')) {
+				continue;
+			}
+			$ext = pathinfo($basename, PATHINFO_EXTENSION);
+			$check_ext = \lang_parser\parsers\parser::lang_default_extensions[$lang];
+			if ($ext !== $check_ext) {
 				continue;
 			}
 			$fp = $source_code_path.$basename;

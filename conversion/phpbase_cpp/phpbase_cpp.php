@@ -8,5 +8,8 @@ final class phpbase_cpp
 	{
 		# pick the parser
 		\lang_parser\parsers\parser::run($lang, $source_code_path, $basename, $gen_path);
+		
+		# then convert
+		
 	}	
 }

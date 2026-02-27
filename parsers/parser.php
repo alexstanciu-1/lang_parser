@@ -120,6 +120,10 @@ final class parser
 		}
 		
 		echo "</pre>";
+		
+		$struct = $ordered;
+		var_dump($ordered[1]->children[0]->parent === $ordered[1]);
+		die;
 	}
 
 	protected static final function static_init(string $lang)

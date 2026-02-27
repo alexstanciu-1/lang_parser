@@ -48,6 +48,8 @@ trait parser_generator
 		$file = "<?php\n\n"."namespace {$ns};\n\n".
 				'final class rex_pos
 {
+	public ?rex_pos $parent = null;
+	public array $children = [];
 	public function __construct(
 			public ?int $pos,
 			public ?rex_pos $prev,
